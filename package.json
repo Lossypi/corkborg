@@ -18,6 +18,7 @@
     "@vitest/ui": "^1.6.1",
     "jsdom": "^23.2.0",
     "svelte": "^4.2.8",
+    "svelte-preprocess": "^6.0.3",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "vitest": "^1.6.1"
