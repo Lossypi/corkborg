@@ -1,7 +1,6 @@
 <!-- src/components/Canvas.svelte -->
 <script lang="ts">
   import { viewport } from '../stores/viewport'
-  import { screenToWorld } from '../lib/geometry'
 
   let isSpaceDown = false
   let isPanning = false
