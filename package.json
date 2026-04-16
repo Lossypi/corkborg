@@ -1,0 +1,25 @@
+{
+  "name": "corkborg",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/svelte": "^4.2.3",
+    "@types/node": "^20.10.6",
+    "@vitest/ui": "^1.6.1",
+    "jsdom": "^23.2.0",
+    "svelte": "^4.2.8",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vitest": "^1.6.1"
+  }
+}
