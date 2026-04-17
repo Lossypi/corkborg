@@ -10,6 +10,7 @@
   import CardEditor from './CardEditor.svelte'
   import TypeSelector from './TypeSelector.svelte'
   import type { Card as CardType } from '../types'
+  import ThreadLayer from './ThreadLayer.svelte'
 
   let isSpaceDown = false
   let isPanning = false
@@ -201,6 +202,11 @@
     {/each}
     <slot />
   </div>
+  <ThreadLayer
+    drawingFrom={null}
+    drawingTo={null}
+    on:threadclick={() => {}}
+  />
 </div>
 
 <style>
