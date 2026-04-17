@@ -13,6 +13,7 @@
   import LayerAssign from './LayerAssign.svelte'
   import type { Card as CardType } from '../types'
   import ThreadLayer from './ThreadLayer.svelte'
+  import Background from './Background.svelte'
 
   let isSpaceDown = false
   let isPanning = false
@@ -246,6 +247,7 @@
   on:dblclick={onDblClick}
   on:contextmenu|preventDefault
 >
+  <Background />
   <div class="canvas-world" style:transform>
     {#each $board.cards as card (card.id)}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
