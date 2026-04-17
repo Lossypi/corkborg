@@ -10,6 +10,7 @@
   import Card from './Card.svelte'
   import CardEditor from './CardEditor.svelte'
   import TypeSelector from './TypeSelector.svelte'
+  import LayerAssign from './LayerAssign.svelte'
   import type { Card as CardType } from '../types'
   import ThreadLayer from './ThreadLayer.svelte'
 
@@ -28,6 +29,9 @@
 
   // Type selector
   let typeSelectorCardId: string | null = null
+
+  // Layer assign
+  let layerAssignCardId: string | null = null
 
   // Thread drawing
   let drawingThread = false
@@ -93,6 +97,7 @@
   }
 
   function onMouseDown(e: MouseEvent) {
+    layerAssignCardId = null
     typeSelectorCardId = null
     // Canvas pan
     if (isSpaceDown || e.button === 1) {
@@ -125,8 +130,13 @@
     }
   }
 
-  function onCardClick(e: MouseEvent, card: CardType) {
+  function onCardClick(e: MouseEvent, card: import('../types').Card) {
     if (e.button !== 0) return
+    if (e.ctrlKey || e.metaKey) {
+      layerAssignCardId = layerAssignCardId === card.id ? null : card.id
+      e.stopPropagation()
+      return
+    }
     editingId = card.id
     e.stopPropagation()
   }
@@ -266,6 +276,12 @@
           <TypeSelector
             current={card.type}
             on:select={e => onTypeSelect(card.id, e.detail)}
+          />
+        {/if}
+        {#if layerAssignCardId === card.id}
+          <LayerAssign
+            currentLayers={card.layers}
+            on:change={e => { board.updateCard(card.id, { layers: e.detail }); layerAssignCardId = null }}
           />
         {/if}
       </div>
