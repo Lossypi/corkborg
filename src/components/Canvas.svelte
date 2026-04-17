@@ -5,6 +5,7 @@
   import { layer as layerStore } from '../stores/layer'
   import { screenToWorld } from '../lib/geometry'
   import { makeCard } from '../lib/cardFactory'
+  import { makeThread, makePin } from '../lib/threadFactory'
   import { computeGravityOffset } from '../lib/gravity'
   import Card from './Card.svelte'
   import CardEditor from './CardEditor.svelte'
@@ -28,8 +29,41 @@
   // Type selector
   let typeSelectorCardId: string | null = null
 
+  // Thread drawing
+  let drawingThread = false
+  let threadFromCard: string | null = null
+  let threadMousePos = { x: 0, y: 0 }
+
+  const EDGE_HIT_PX = 14
+
+  // Thread editing (Task 13)
+  let editingThreadId: string | null = null
+
   function toWorld(e: MouseEvent) {
     return screenToWorld(e.clientX, e.clientY, $viewport)
+  }
+
+  function isOnCardEdge(
+    e: MouseEvent,
+    card: { x: number; y: number; width: number; height: number },
+  ): boolean {
+    const world = toWorld(e)
+    const dx = world.x - card.x
+    const dy = world.y - card.y
+    const w = card.width
+    const h = card.height
+    const near =
+      dx < EDGE_HIT_PX || dx > w - EDGE_HIT_PX ||
+      dy < EDGE_HIT_PX || dy > h - EDGE_HIT_PX
+    const inside = dx > 0 && dx < w && dy > 0 && dy < h
+    return near && inside
+  }
+
+  function getCardAtWorld(wx: number, wy: number): import('../types').Card | null {
+    return [...$board.cards].reverse().find(c =>
+      wx >= c.x && wx <= c.x + c.width &&
+      wy >= c.y && wy <= c.y + c.height
+    ) ?? null
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -67,7 +101,6 @@
 
   function onCardMouseDown(e: MouseEvent, card: CardType) {
     if (e.button === 2) {
-      // RMB drag to move
       draggingId = card.id
       dragCardOrigin = { x: card.x, y: card.y }
       dragMouseStart = { x: e.clientX, y: e.clientY }
@@ -75,6 +108,15 @@
       e.preventDefault()
       e.stopPropagation()
     } else if (e.button === 0) {
+      if (isOnCardEdge(e, card)) {
+        // Start drawing thread
+        drawingThread = true
+        threadFromCard = card.id
+        threadMousePos = toWorld(e)
+        e.preventDefault()
+        e.stopPropagation()
+        return
+      }
       board.bringToFront(card.id)
     }
   }
@@ -117,9 +159,33 @@
         y: dragCardOrigin.y + dy,
       })
     }
+    if (drawingThread) {
+      threadMousePos = toWorld(e)
+    }
   }
 
   function onMouseUp(e: MouseEvent) {
+    if (drawingThread && threadFromCard) {
+      const world = toWorld(e)
+      const target = getCardAtWorld(world.x, world.y)
+      if (target && target.id !== threadFromCard) {
+        // Ensure both cards have pins
+        const fromCard = $board.cards.find(c => c.id === threadFromCard)!
+        if (!fromCard.pinId) {
+          const pin = makePin(threadFromCard)
+          board.addPin(pin)
+          board.updateCard(threadFromCard, { pinId: pin.id })
+        }
+        if (!target.pinId) {
+          const pin = makePin(target.id)
+          board.addPin(pin)
+          board.updateCard(target.id, { pinId: pin.id })
+        }
+        board.addThread(makeThread(threadFromCard, target.id, $layerStore.active))
+      }
+      drawingThread = false
+      threadFromCard = null
+    }
     isPanning = false
     draggingId = null
   }
@@ -203,9 +269,12 @@
     <slot />
   </div>
   <ThreadLayer
-    drawingFrom={null}
-    drawingTo={null}
-    on:threadclick={() => {}}
+    drawingFrom={drawingThread ? threadFromCard : null}
+    drawingTo={drawingThread ? threadMousePos : null}
+    {editingThreadId}
+    on:threadclick={e => (editingThreadId = e.detail)}
+    on:labelsave={e => { board.updateThread(e.detail.id, { label: e.detail.label || null }); editingThreadId = null }}
+    on:labelclose={() => (editingThreadId = null)}
   />
 </div>
 
