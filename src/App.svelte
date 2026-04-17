@@ -2,6 +2,7 @@
 <script lang="ts">
   import Canvas from './components/Canvas.svelte'
   import LayerSwitch from './components/LayerSwitch.svelte'
+  import Minimap from './components/Minimap.svelte'
   import { layer } from './stores/layer'
 
   const THEMES = {
@@ -26,6 +27,7 @@
 <main style={cssVars}>
   <Canvas />
   <LayerSwitch />
+  <Minimap />
 </main>
 
 <style>
