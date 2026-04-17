@@ -71,6 +71,10 @@
       isSpaceDown = true
       e.preventDefault()
     }
+    if (e.code === 'Tab') {
+      e.preventDefault()
+      layerStore.toggle()
+    }
   }
   function onKeyUp(e: KeyboardEvent) {
     if (e.code === 'Space') isSpaceDown = false
