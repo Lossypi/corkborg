@@ -17,6 +17,8 @@
   import ThreadLayer from './ThreadLayer.svelte'
   import Background from './Background.svelte'
 
+  export let readonly = false
+
   let isSpaceDown = false
   let isPanning = false
   let panStart = { x: 0, y: 0 }
@@ -93,6 +95,7 @@
 
   // Double-click on canvas background → create card
   function onDblClick(e: MouseEvent) {
+    if (readonly) return
     const target = e.target as HTMLElement
     if (!target.classList.contains('canvas-root') && !target.classList.contains('canvas-world')) return
     const world = toWorld(e)
@@ -117,6 +120,7 @@
 
   function onCardMouseDown(e: MouseEvent, card: CardType) {
     if (e.button === 2) {
+      if (readonly) return
       draggingId = card.id
       dragCardOrigin = { x: card.x, y: card.y }
       dragMouseStart = { x: e.clientX, y: e.clientY }
@@ -125,6 +129,7 @@
       e.stopPropagation()
     } else if (e.button === 0) {
       if (isOnCardEdge(e, card)) {
+        if (readonly) return
         // Start drawing thread
         drawingThread = true
         threadFromCard = card.id
@@ -166,6 +171,7 @@
   }
 
   async function onDrop(e: DragEvent) {
+    if (readonly) return
     e.preventDefault()
     const file = e.dataTransfer?.files[0]
     if (!file || !file.type.startsWith('image/')) return
@@ -244,6 +250,7 @@
   }
 
   function onCardShiftWheel(e: WheelEvent, card: CardType) {
+    if (readonly) return
     if (!e.shiftKey) return
     e.preventDefault()
     e.stopPropagation()
@@ -258,6 +265,25 @@
     board.updateCard(cardId, {
       content: { ...existingCard.content, [$layerStore.active]: content }
     })
+  }
+
+  // Touch pan (tablet readonly mode)
+  let touchStart = { x: 0, y: 0 }
+  let touchOrigin = { x: 0, y: 0 }
+
+  function onTouchStart(e: TouchEvent) {
+    if (!readonly || e.touches.length !== 1) return
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    touchOrigin = { x: $viewport.x, y: $viewport.y }
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    if (!readonly || e.touches.length !== 1) return
+    e.preventDefault()
+    viewport.setPan(
+      touchOrigin.x + e.touches[0].clientX - touchStart.x,
+      touchOrigin.y + e.touches[0].clientY - touchStart.y,
+    )
   }
 
   $: transform = `translate(${$viewport.x}px, ${$viewport.y}px) scale(${$viewport.scale})`
@@ -280,6 +306,8 @@
   on:contextmenu|preventDefault
   on:drop={onDrop}
   on:dragover={onDragOver}
+  on:touchstart={onTouchStart}
+  on:touchmove|preventDefault={onTouchMove}
 >
   <Background />
   <div class="canvas-world" style:transform>
