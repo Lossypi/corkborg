@@ -15,10 +15,16 @@
     idea:     'polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
   }
 
+  const TYPE_LABELS: Record<string, string> = {
+    generic: '', npc: 'NPC', location: 'LOC', event: 'EVT', idea: 'IDEA',
+  }
+
   $: clipPath = CLIPS[card.type] ?? 'none'
   $: isVisible = card.layers.includes(activeLayer)
   $: opacity = isVisible ? 1 : ghostOpacity
-  $: content = isVisible ? card.content[activeLayer] : (card.content.lor || card.content.meta)
+  $: displayContent = isVisible
+    ? card.content[activeLayer]
+    : (card.content.lor || card.content.meta)
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -30,9 +36,10 @@
   style:opacity
   style:font-size="{card.fontSize}px"
 >
-  <div class="card-content">
-    {content}
-  </div>
+  {#if TYPE_LABELS[card.type]}
+    <span class="type-badge">{TYPE_LABELS[card.type]}</span>
+  {/if}
+  <div class="card-content">{displayContent}</div>
 </div>
 
 <style>
@@ -46,6 +53,16 @@
     padding: 8px;
     transition: opacity 0.2s;
     box-shadow: 1px 2px 4px rgba(0,0,0,0.25);
+  }
+  .type-badge {
+    position: absolute;
+    top: 3px;
+    right: 6px;
+    font-size: 9px;
+    opacity: 0.5;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    pointer-events: none;
   }
   .card-content {
     width: 100%;

@@ -8,6 +8,7 @@
   import { computeGravityOffset } from '../lib/gravity'
   import Card from './Card.svelte'
   import CardEditor from './CardEditor.svelte'
+  import TypeSelector from './TypeSelector.svelte'
   import type { Card as CardType } from '../types'
 
   let isSpaceDown = false
@@ -22,6 +23,9 @@
 
   // Editing
   let editingId: string | null = null
+
+  // Type selector
+  let typeSelectorCardId: string | null = null
 
   function toWorld(e: MouseEvent) {
     return screenToWorld(e.clientX, e.clientY, $viewport)
@@ -50,6 +54,7 @@
   }
 
   function onMouseDown(e: MouseEvent) {
+    typeSelectorCardId = null
     // Canvas pan
     if (isSpaceDown || e.button === 1) {
       isPanning = true
@@ -77,6 +82,23 @@
     if (e.button !== 0) return
     editingId = card.id
     e.stopPropagation()
+  }
+
+  function onCardContextMenu(e: MouseEvent, card: CardType) {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only open selector if mouse didn't move much (not a drag)
+    const dx = Math.abs(e.clientX - dragMouseStart.x)
+    const dy = Math.abs(e.clientY - dragMouseStart.y)
+    if (dx < 5 && dy < 5) {
+      typeSelectorCardId = typeSelectorCardId === card.id ? null : card.id
+    }
+    draggingId = null
+  }
+
+  function onTypeSelect(cardId: string, type: import('../types').CardType) {
+    board.updateCard(cardId, { type })
+    typeSelectorCardId = null
   }
 
   function onMouseMove(e: MouseEvent) {
@@ -154,7 +176,7 @@
         on:mousedown={e => onCardMouseDown(e, card)}
         on:click={e => onCardClick(e, card)}
         on:wheel={e => onCardShiftWheel(e, card)}
-        on:contextmenu|preventDefault
+        on:contextmenu={e => onCardContextMenu(e, card)}
       >
         <Card
           {card}
@@ -167,6 +189,12 @@
             activeLayer={$layerStore.active}
             on:save={e => onEditorSave(card.id, e.detail.content)}
             on:close={() => (editingId = null)}
+          />
+        {/if}
+        {#if typeSelectorCardId === card.id}
+          <TypeSelector
+            current={card.type}
+            on:select={e => onTypeSelect(card.id, e.detail)}
           />
         {/if}
       </div>
