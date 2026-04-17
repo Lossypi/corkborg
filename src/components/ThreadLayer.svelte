@@ -7,6 +7,7 @@
   import { computeSagPath } from '../lib/bezier'
   import Thread from './Thread.svelte'
   import Pin from './Pin.svelte'
+  import ThreadLabelEditor from './ThreadLabelEditor.svelte'
 
   export let drawingFrom: string | null = null
   export let drawingTo: { x: number; y: number } | null = null
@@ -57,6 +58,27 @@
         <Pin x={pos.x} y={pos.y} />
       {/if}
     {/each}
+
+    <!-- Thread label editor -->
+    {#if editingThreadId}
+      {@const t = $board.threads.find(th => th.id === editingThreadId)}
+      {#if t}
+        {@const p1 = getPinPos(t.from.cardId)}
+        {@const p2 = getPinPos(t.to.cardId)}
+        {#if p1 && p2}
+          {@const path = computeSagPath(p1.x, p1.y, p2.x, p2.y)}
+          <g style="pointer-events:all">
+            <ThreadLabelEditor
+              x={path.midX}
+              y={path.midY}
+              value={t.label ?? ''}
+              on:save={e => dispatch('labelsave', { id: editingThreadId, label: e.detail })}
+              on:close={() => dispatch('labelclose')}
+            />
+          </g>
+        {/if}
+      {/if}
+    {/if}
 
     <!-- In-progress thread preview while drawing -->
     {#if drawingFrom && drawingTo}
