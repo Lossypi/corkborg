@@ -7,6 +7,8 @@
   import { makeCard } from '../lib/cardFactory'
   import { makeThread, makePin } from '../lib/threadFactory'
   import { computeGravityOffset } from '../lib/gravity'
+  import ImageNode from './ImageNode.svelte'
+  import { makeImageNode, fileToDataUrl } from '../lib/imageFactory'
   import Card from './Card.svelte'
   import CardEditor from './CardEditor.svelte'
   import TypeSelector from './TypeSelector.svelte'
@@ -24,6 +26,10 @@
   let draggingId: string | null = null
   let dragCardOrigin = { x: 0, y: 0 }
   let dragMouseStart = { x: 0, y: 0 }
+
+  // Image drag (RMB)
+  let draggingImageId: string | null = null
+  let dragImageOrigin = { x: 0, y: 0 }
 
   // Editing
   let editingId: string | null = null
@@ -159,6 +165,26 @@
     typeSelectorCardId = null
   }
 
+  async function onDrop(e: DragEvent) {
+    e.preventDefault()
+    const file = e.dataTransfer?.files[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const dataUrl = await fileToDataUrl(file)
+    const world = toWorld(e as unknown as MouseEvent)
+    board.addImage(makeImageNode(world.x - 100, world.y - 75, dataUrl))
+  }
+  function onDragOver(e: DragEvent) { e.preventDefault() }
+
+  function onImageMouseDown(e: MouseEvent, img: { id: string; x: number; y: number }) {
+    if (e.button === 2) {
+      draggingImageId = img.id
+      dragImageOrigin = { x: img.x, y: img.y }
+      dragMouseStart = { x: e.clientX, y: e.clientY }
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
   function onMouseMove(e: MouseEvent) {
     if (isPanning) {
       viewport.setPan(
@@ -173,6 +199,11 @@
         x: dragCardOrigin.x + dx,
         y: dragCardOrigin.y + dy,
       })
+    }
+    if (draggingImageId) {
+      const dx = (e.clientX - dragMouseStart.x) / $viewport.scale
+      const dy = (e.clientY - dragMouseStart.y) / $viewport.scale
+      board.updateImage(draggingImageId, { x: dragImageOrigin.x + dx, y: dragImageOrigin.y + dy })
     }
     if (drawingThread) {
       threadMousePos = toWorld(e)
@@ -203,6 +234,7 @@
     }
     isPanning = false
     draggingId = null
+    draggingImageId = null
   }
 
   function onWheel(e: WheelEvent) {
@@ -246,9 +278,14 @@
   on:wheel={onWheel}
   on:dblclick={onDblClick}
   on:contextmenu|preventDefault
+  on:drop={onDrop}
+  on:dragover={onDragOver}
 >
   <Background />
   <div class="canvas-world" style:transform>
+    {#each $board.images as image (image.id)}
+      <ImageNode {image} on:mousedown={e => onImageMouseDown(e, image)} />
+    {/each}
     {#each $board.cards as card (card.id)}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div
