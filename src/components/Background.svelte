@@ -1,22 +1,34 @@
 <!-- src/components/Background.svelte -->
 <script lang="ts">
+  import { layer as layerStore } from '../stores/layer'
+  import { LAYER_TOKENS } from '../lib/theme'
+  import { corkBackground } from '../lib/decorations'
+
+  const cork = corkBackground()
+
+  $: tokens = LAYER_TOKENS[$layerStore.active]
+  $: isLor = $layerStore.active === 'lor'
 </script>
 
 <div class="bg-root">
-  <!-- Cork texture via SVG filter -->
-  <svg class="cork-texture" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="cork">
-        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-        <feColorMatrix type="saturate" values="0.3" />
-        <feBlend in="SourceGraphic" mode="multiply" />
-      </filter>
-    </defs>
-    <rect width="100%" height="100%" fill="#c8a97b" filter="url(#cork)" />
-  </svg>
+  <!-- Cork texture: SVG data-URI, non-tiling, organic -->
+  <div class="cork" style:background={cork} />
 
-  <!-- Radial vignette: transparent center → fade at edges -->
-  <div class="vignette" />
+  <!-- Layer-specific vignette -->
+  <div class="vignette" style:background={tokens.vignette} />
+
+  <!-- Meta overlay: cold blue wash -->
+  {#if !isLor}
+    <div class="meta-overlay" />
+  {/if}
+
+  <!-- Blueprint grid (meta only) -->
+  {#if !isLor}
+    <div class="blueprint-grid" />
+  {/if}
+
+  <!-- Wood frame inset -->
+  <div class="wood-frame" />
 </div>
 
 <style>
@@ -26,19 +38,37 @@
     pointer-events: none;
     z-index: 0;
   }
-  .cork-texture {
+  .cork {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
+    background-size: 100% 100%;
   }
   .vignette {
     position: absolute;
     inset: 0;
-    background: radial-gradient(
-      ellipse 80% 70% at 50% 50%,
-      transparent 40%,
-      rgba(240, 220, 180, 0.5) 100%
-    );
+    transition: background 0.4s;
+  }
+  .meta-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(18, 36, 72, 0.32);
+  }
+  .blueprint-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(80,140,220,0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80,140,220,0.09) 1px, transparent 1px),
+      linear-gradient(rgba(80,140,220,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(80,140,220,0.035) 1px, transparent 1px);
+    background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+  }
+  .wood-frame {
+    position: absolute;
+    inset: 0;
+    box-shadow:
+      inset 0 0 0 6px rgba(80,50,20,0.35),
+      inset 0 0 0 7px rgba(40,20,0,0.5),
+      inset 0 0 30px rgba(0,0,0,0.25);
   }
 </style>
