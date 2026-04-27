@@ -5,7 +5,7 @@ import { layer } from '../../src/stores/layer'
 
 beforeEach(() => {
   layer.setActive('lor')
-  layer.setGhostOpacity(0.3)
+  layer.setInactiveDim(0)
 })
 
 describe('layer store', () => {
@@ -29,15 +29,15 @@ describe('layer store', () => {
     expect(get(layer).active).toBe('meta')
   })
 
-  it('setGhostOpacity clamps to 0–1', () => {
-    layer.setGhostOpacity(1.5)
-    expect(get(layer).ghostOpacity).toBe(1)
-    layer.setGhostOpacity(-0.2)
-    expect(get(layer).ghostOpacity).toBe(0)
+  it('setInactiveDim clamps to 0–1', () => {
+    layer.setInactiveDim(1.5)
+    expect(get(layer).inactiveDim).toBe(1)
+    layer.setInactiveDim(-0.2)
+    expect(get(layer).inactiveDim).toBe(0)
   })
 
-  it('setGhostOpacity stores value', () => {
-    layer.setGhostOpacity(0.6)
-    expect(get(layer).ghostOpacity).toBe(0.6)
+  it('setInactiveDim stores value', () => {
+    layer.setInactiveDim(0.6)
+    expect(get(layer).inactiveDim).toBe(0.6)
   })
 })

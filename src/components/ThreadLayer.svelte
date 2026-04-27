@@ -5,6 +5,7 @@
   import { layer as layerStore } from '../stores/layer'
   import { viewport } from '../stores/viewport'
   import { computeSagPath } from '../lib/bezier'
+  import { LAYER_TOKENS } from '../lib/theme'
   import Thread from './Thread.svelte'
   import Pin from './Pin.svelte'
   import ThreadLabelEditor from './ThreadLabelEditor.svelte'
@@ -15,19 +16,14 @@
 
   const dispatch = createEventDispatcher<{ threadclick: string; labelsave: { id: string; label: string }; labelclose: void }>()
 
-  const LAYER_COLORS: Record<string, string> = {
-    lor:  '#8b2020',
-    meta: '#1a4a8b',
-  }
-
   function getPinPos(cardId: string): { x: number; y: number } | null {
     const card = $board.cards.find(c => c.id === cardId)
     if (!card) return null
-    return { x: card.x + card.width / 2, y: card.y }
+    return { x: card.x + card.width / 2, y: card.y + 14 }
   }
 
   function threadOpacity(threadLayer: string): number {
-    return threadLayer === $layerStore.active ? 1 : $layerStore.ghostOpacity
+    return threadLayer === $layerStore.active ? 1 : Math.max(0.07, $layerStore.inactiveDim)
   }
 </script>
 
@@ -38,14 +34,17 @@
     {#each $board.threads as thread (thread.id)}
       {@const p1 = getPinPos(thread.from.cardId)}
       {@const p2 = getPinPos(thread.to.cardId)}
+      {@const tTokens = LAYER_TOKENS[thread.layer]}
       {#if p1 && p2}
         <g style="pointer-events:all">
           <Thread
             {thread}
             x1={p1.x} y1={p1.y}
             x2={p2.x} y2={p2.y}
-            color={LAYER_COLORS[thread.layer] ?? '#8b4513'}
+            color={tTokens.thread}
             opacity={threadOpacity(thread.layer)}
+            sag={tTokens.sagPx}
+            isLor={thread.layer === 'lor'}
             on:click={() => dispatch('threadclick', thread.id)}
           />
         </g>
@@ -55,7 +54,7 @@
     {#each $board.pins as pin (pin.id)}
       {@const pos = getPinPos(pin.cardId)}
       {#if pos}
-        <Pin x={pos.x} y={pos.y} />
+        <Pin x={pos.x} y={pos.y} pinStyle={LAYER_TOKENS[$layerStore.active].pinStyle} />
       {/if}
     {/each}
 
@@ -66,7 +65,8 @@
         {@const p1 = getPinPos(t.from.cardId)}
         {@const p2 = getPinPos(t.to.cardId)}
         {#if p1 && p2}
-          {@const path = computeSagPath(p1.x, p1.y, p2.x, p2.y)}
+          {@const tTokens = LAYER_TOKENS[t.layer]}
+          {@const path = computeSagPath(p1.x, p1.y, p2.x, p2.y, tTokens.sagPx)}
           <g style="pointer-events:all">
             <ThreadLabelEditor
               x={path.midX}
@@ -84,8 +84,8 @@
     {#if drawingFrom && drawingTo}
       {@const fromPos = getPinPos(drawingFrom)}
       {#if fromPos}
-        {@const path = computeSagPath(fromPos.x, fromPos.y, drawingTo.x, drawingTo.y)}
-        <path d={path.d} fill="none" stroke="#888" stroke-width="2" stroke-dasharray="6 4" />
+        {@const path = computeSagPath(fromPos.x, fromPos.y, drawingTo.x, drawingTo.y, LAYER_TOKENS[$layerStore.active].sagPx)}
+        <path d={path.d} fill="none" stroke={LAYER_TOKENS[$layerStore.active].thread} stroke-width="2" stroke-dasharray="6 4" opacity="0.6" />
       {/if}
     {/if}
   </g>

@@ -9,24 +9,11 @@
   import { board } from './stores/board'
   import { loadFromStorage, initAutosave } from './lib/persistence'
   import { isTablet } from './lib/tablet'
+  import { layerCssVars, LAYER_TOKENS } from './lib/theme'
 
-  const THEMES = {
-    lor: {
-      '--bg':           '#c8a97b',
-      '--card-bg':      '#faf0dc',
-      '--card-border':  '#b8903a',
-      '--thread-color': '#8b2020',
-    },
-    meta: {
-      '--bg':           '#7b9ec8',
-      '--card-bg':      '#dceeff',
-      '--card-border':  '#5a80b8',
-      '--thread-color': '#1a4a8b',
-    },
-  }
-
-  $: theme = THEMES[$layer.active]
-  $: cssVars = Object.entries(theme).map(([k, v]) => `${k}:${v}`).join(';')
+  $: tokens = LAYER_TOKENS[$layer.active]
+  $: cssVarsObj = layerCssVars($layer.active)
+  $: cssVars = Object.entries(cssVarsObj).map(([k, v]) => `${k}:${v}`).join(';')
 
   const tabletMode = isTablet()
   let showExport = false
@@ -48,7 +35,14 @@
   {/if}
   <Minimap />
   {#if !tabletMode}
-    <button class="export-btn" on:click={() => showExport = true}>⬆ Экспорт</button>
+    <!-- Layer indicator badge — top-left -->
+    <div class="layer-badge" style:border-color={tokens.accent}>
+      {tokens.modeLabel}
+    </div>
+    <!-- Export button — top-right -->
+    <button class="chrome-btn export-btn" on:click={() => showExport = true}>
+      ⬆ Экспорт
+    </button>
     {#if showExport}
       <ExportPanel on:close={() => showExport = false} />
     {/if}
@@ -62,20 +56,40 @@
   main {
     width: 100%;
     height: 100%;
-    background: var(--bg);
-    transition: background 0.3s;
+    transition: filter 0.4s;
+  }
+  .layer-badge {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: rgba(20,14,8,0.82);
+    color: #f5e8cc;
+    border-left: 3px solid;
+    padding: 8px 14px;
+    border-radius: 2px;
+    font-family: "Inter Tight", system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .chrome-btn {
+    background: rgba(20,14,8,0.82);
+    color: #f5e8cc;
+    border: none;
+    border-radius: 2px;
+    font-family: "Inter Tight", system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 1000;
+    position: fixed;
   }
   .export-btn {
-    position: fixed;
     top: 16px;
     right: 16px;
     padding: 6px 14px;
-    background: rgba(255,255,255,0.85);
-    border: 1px solid #aaa;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 13px;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 </style>
