@@ -3,6 +3,10 @@
   import { layer } from '../stores/layer'
   import { LAYER_TOKENS } from '../lib/theme'
 
+  function onDimInput(e: Event) {
+    layer.setInactiveDim(Number((e.target as HTMLInputElement).value))
+  }
+
   $: lorTokens  = LAYER_TOKENS['lor']
   $: metaTokens = LAYER_TOKENS['meta']
   $: active = $layer.active
@@ -40,7 +44,7 @@
       max="1"
       step="0.04"
       value={$layer.inactiveDim}
-      on:input={e => layer.setInactiveDim(Number((e.target as HTMLInputElement).value))}
+      on:input={onDimInput}
     />
   </label>
 </div>
