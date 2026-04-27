@@ -46,9 +46,9 @@ export type BoardState = {
 }
 
 export const CARD_SIZES = {
-  S: { width: 120, height: 80 },
-  M: { width: 180, height: 120 },
-  L: { width: 240, height: 160 },
+  S: { width: 150, height: 100 },
+  M: { width: 200, height: 130 },
+  L: { width: 260, height: 170 },
 } as const
 
 export type CardSize = keyof typeof CARD_SIZES

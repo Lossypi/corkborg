@@ -27,7 +27,7 @@
   }
 
   function threadOpacity(threadLayer: string): number {
-    return threadLayer === $layerStore.active ? 1 : $layerStore.ghostOpacity
+    return threadLayer === $layerStore.active ? 1 : Math.max(0.07, $layerStore.inactiveDim)
   }
 </script>
 

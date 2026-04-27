@@ -329,7 +329,7 @@
         <Card
           {card}
           activeLayer={$layerStore.active}
-          ghostOpacity={$layerStore.ghostOpacity}
+          inactiveDim={$layerStore.inactiveDim}
         />
         {#if editingId === card.id}
           <CardEditor
